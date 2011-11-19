@@ -19,7 +19,7 @@ get_auth_data (const char * srv, const char * shr, char * wg, int wglen,
 
 void scan (char* path) {
 	char p[1024], query[1024];
-	int dir;
+    int dir;
 	struct smbc_dirent * dirent;
 	struct stat stat;
 
@@ -39,7 +39,7 @@ void scan (char* path) {
 		strcpy(p, path);
 		strcat(p, "/");
 		strcat(p, dirent -> name);
-		if (!debug) printf("%s\n", path);
+		//if (!debug) printf("%s\n", path);
 
 		if (dirent -> smbc_type == SMBC_DIR ||
 		    dirent -> smbc_type == SMBC_FILE_SHARE) {
@@ -49,7 +49,7 @@ void scan (char* path) {
 			if (smbc_stat(p, &stat) < 0) {
 				if (debug) fprintf(stderr, "stat() failed (%s)\n", strerror(errno));
 			} else {
-				printf("%s (%lu kb)\n", dirent -> name, stat.st_size / 1024);
+				if (debug) printf("%s (%lu kb)\n", dirent -> name, stat.st_size / 1024);
                 sprintf(query, "insert into files values(\"%s\", %llu, \"%s\")", 
                         dirent->name, stat.st_size, p);
                 if (mysql_query(conn, query)) {
