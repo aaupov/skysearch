@@ -24,26 +24,26 @@ void usage(void) {
 }
 
 void scan (char* path) {
-	char p[1024], query[1024];
+    char p[1024], query[1024];
     int dir;
-	struct smbc_dirent * dirent;
-	struct stat stat;
+    struct smbc_dirent * dirent;
+    struct stat stat;
 
-	if ((dir = smbc_opendir(path)) < 0) {
-		if (debug) fprintf(stderr, "Couldn't open %s (%s)\n", path, strerror(errno));
-		return;
-	} 
+    if ((dir = smbc_opendir(path)) < 0) {
+        if (debug) fprintf(stderr, "Couldn't open %s (%s)\n", path, strerror(errno));
+        return;
+    } 
 
-	while ((dirent = smbc_readdir(dir)) != NULL) {
-		if (!strcmp(dirent -> name, ".") ||
-		    !strcmp(dirent -> name, "..")) {
-			continue;
-		}
+    while ((dirent = smbc_readdir(dir)) != NULL) {
+        if (!strcmp(dirent -> name, ".") ||
+            !strcmp(dirent -> name, "..")) {
+            continue;
+        }
 
         sprintf(p, "%s/%s", path, dirent->name);
-		if (debug) fprintf(stderr, "%s ", p);
+        if (debug) fprintf(stderr, "%s ", p);
 
-		if (dirent->smbc_type == SMBC_SERVER){
+        if (dirent->smbc_type == SMBC_SERVER){
             sprintf(p, "smb://%s", dirent->name);
             scan(p);
 
@@ -51,39 +51,39 @@ void scan (char* path) {
             if (dirent->smbc_type == SMBC_WORKGROUP ||
             dirent->smbc_type == SMBC_DIR ||
             dirent->smbc_type == SMBC_FILE_SHARE) {
-			if (debug) fprintf(stderr, "\nscan(%s)\n", p);
-			scan(p);
+            if (debug) fprintf(stderr, "\nscan(%s)\n", p);
+            scan(p);
 
-		} else //neither server nor wg, directory or share, so it's a file
+        } else //neither server nor wg, directory or share, so it's a file
             if (dirent -> smbc_type == SMBC_FILE) {
-			if (smbc_stat(p, &stat) < 0) { 
-				if (debug) fprintf(stderr, "stat() failed (%s)\n", strerror(errno));
-			} else { //file exists
-				if (debug) fprintf(stderr, "(%lu kb)\n", stat.st_size / 1024);
+            if (smbc_stat(p, &stat) < 0) { 
+                if (debug) fprintf(stderr, "stat() failed (%s)\n", strerror(errno));
+            } else { //file exists
+                if (debug) fprintf(stderr, "(%lu kb)\n", stat.st_size / 1024);
                 sprintf(query, "insert into srchdb.files values(\"%s\", %llu, \"%s\")", 
                         dirent->name, stat.st_size, p);
                 if (mysql_query(conn, query)) {
                     if (debug) fprintf(stderr, "FAILED \"%s\":\n\t%s\n", query, mysql_error(conn));
                 }
-			} 
+            } 
 
-		} else //otherwise, something went wrong
+        } else //otherwise, something went wrong
             if (debug) {
-			fprintf(stderr, "UNHANDLED: %s ", dirent -> name);
-			switch (dirent -> smbc_type){
-				case SMBC_PRINTER_SHARE:
-					fprintf(stderr, "(PRINTER_SHARE)\n"); break;
-				case SMBC_COMMS_SHARE:
-					fprintf(stderr, "(COMMS_SHARE)\n"); break;
-				case SMBC_IPC_SHARE:
-					fprintf(stderr, "(IPC_SHARE)\n"); break;
-				case SMBC_LINK:
-					fprintf(stderr, "(LINK)\n"); break;
-				default:
-					fprintf(stderr, "(%d)\n", dirent->smbc_type);
-			}
-		} //handling of unhandled
-	}
+            fprintf(stderr, "UNHANDLED: %s ", dirent -> name);
+            switch (dirent -> smbc_type){
+                case SMBC_PRINTER_SHARE:
+                    fprintf(stderr, "(PRINTER_SHARE)\n"); break;
+                case SMBC_COMMS_SHARE:
+                    fprintf(stderr, "(COMMS_SHARE)\n"); break;
+                case SMBC_IPC_SHARE:
+                    fprintf(stderr, "(IPC_SHARE)\n"); break;
+                case SMBC_LINK:
+                    fprintf(stderr, "(LINK)\n"); break;
+                default:
+                    fprintf(stderr, "(%d)\n", dirent->smbc_type);
+            }
+        } //handling of unhandled
+    }
     smbc_closedir(dir);
 }
 
