@@ -94,7 +94,7 @@ int main (int argc, char* argv[]) {
 	
     if (argc < 1) usage();
 
-	if (smbc_init(get_auth_data, 0)) {
+    if (smbc_init(get_auth_data, 0)) {
         fprintf(stderr, "%s\n", strerror(errno));
         return 1;
     }
